@@ -11,5 +11,8 @@ dependencies = [
     "numpy",
 ]
 
+[tool.setuptools.package-data]
+napari_lif_loader = ["napari.yaml"]
+
 [project.entry-points."napari.manifest"]
 napari-lif-loader = "napari_lif_loader:napari.yaml"
