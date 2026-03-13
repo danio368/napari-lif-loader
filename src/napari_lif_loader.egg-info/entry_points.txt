@@ -1,2 +1,0 @@
-[napari.manifest]
-napari-lif-loader = napari_lif_loader:napari.yaml

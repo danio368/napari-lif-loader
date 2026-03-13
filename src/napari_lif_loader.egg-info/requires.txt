@@ -1,3 +1,0 @@
-napari
-readlif
-numpy
