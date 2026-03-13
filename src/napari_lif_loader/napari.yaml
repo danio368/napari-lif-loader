@@ -1,0 +1,10 @@
+name: napari-lif-loader
+display_name: LIF Loader
+contributions:
+  commands:
+    - id: napari-lif-loader.lif_loader
+      title: LIF Loader
+      python_name: napari_lif_loader._widget:LifLoaderWidget
+  widgets:
+    - command: napari-lif-loader.lif_loader
+      display_name: LIF Loader

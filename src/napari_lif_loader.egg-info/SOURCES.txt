@@ -1,0 +1,9 @@
+pyproject.toml
+src/napari_lif_loader/__init__.py
+src/napari_lif_loader/_widget.py
+src/napari_lif_loader.egg-info/PKG-INFO
+src/napari_lif_loader.egg-info/SOURCES.txt
+src/napari_lif_loader.egg-info/dependency_links.txt
+src/napari_lif_loader.egg-info/entry_points.txt
+src/napari_lif_loader.egg-info/requires.txt
+src/napari_lif_loader.egg-info/top_level.txt

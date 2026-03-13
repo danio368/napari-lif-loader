@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "napari-lif-loader"
+version = "0.1.0"
+dependencies = [
+    "napari",
+    "readlif",
+    "numpy",
+]
+
+[project.entry-points."napari.manifest"]
+napari-lif-loader = "napari_lif_loader:napari.yaml"

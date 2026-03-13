@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: napari-lif-loader
+Version: 0.1.0
+Requires-Dist: napari
+Requires-Dist: readlif
+Requires-Dist: numpy
