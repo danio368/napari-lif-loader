@@ -4,7 +4,7 @@ import numpy as np
 from readlif.reader import LifFile
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QListWidget, QPushButton, QLabel, QFileDialog,
-    QGroupBox, QFormLayout, QComboBox,
+    QGroupBox, QFormLayout, QComboBox, QSizePolicy,
 )
 import napari
 from napari.utils.colormaps import AVAILABLE_COLORMAPS
@@ -44,6 +44,7 @@ class LifLoaderWidget(QWidget):
 
         # Label showing file name
         self.file_label = QLabel("No file loaded")
+        self._make_shrinkable(self.file_label)
         self.layout().addWidget(self.file_label)
 
         # List of images
@@ -59,7 +60,14 @@ class LifLoaderWidget(QWidget):
 
         # Status label
         self.status_label = QLabel("")
+        self._make_shrinkable(self.status_label)
         self.layout().addWidget(self.status_label)
+
+    @staticmethod
+    def _make_shrinkable(label):
+        # Wrap long text instead of forcing the dock to be as wide as the text
+        label.setWordWrap(True)
+        label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Open LIF file", "", "LIF files (*.lif)")
@@ -145,6 +153,9 @@ class LifLoaderWidget(QWidget):
         names = _lut_names()
         for c in range(n_channels):
             combo = QComboBox()
+            # Let the closed dropdown shrink instead of fitting the longest LUT name
+            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            combo.setMinimumContentsLength(8)
             combo.addItems(names)
             combo.setCurrentText(self._lut_for_channel(c))
             combo.currentTextChanged.connect(
