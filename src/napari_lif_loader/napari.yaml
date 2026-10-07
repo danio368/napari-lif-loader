@@ -5,6 +5,13 @@ contributions:
     - id: napari-lif-loader.lif_loader
       title: LIF Loader
       python_name: napari_lif_loader._widget:LifLoaderWidget
+    - id: napari-lif-loader.get_reader
+      title: Open .lif file
+      python_name: napari_lif_loader._reader:get_reader
+  readers:
+    - command: napari-lif-loader.get_reader
+      filename_patterns: ["*.lif"]
+      accepts_directories: false
   widgets:
     - command: napari-lif-loader.lif_loader
       display_name: LIF Loader

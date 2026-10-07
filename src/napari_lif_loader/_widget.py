@@ -1,7 +1,27 @@
+import os
+
 import numpy as np
 from readlif.reader import LifFile
-from qtpy.QtWidgets import QWidget, QVBoxLayout, QListWidget, QPushButton, QLabel, QFileDialog
+from qtpy.QtWidgets import (
+    QWidget, QVBoxLayout, QListWidget, QPushButton, QLabel, QFileDialog,
+    QGroupBox, QFormLayout, QComboBox,
+)
 import napari
+from napari.utils.colormaps import AVAILABLE_COLORMAPS
+
+# Default LUT for each channel (cycled if there are more channels)
+DEFAULT_LUTS = ["green", "magenta", "cyan", "yellow", "red", "blue", "gray"]
+
+# Common LUTs shown first in the dropdowns, followed by all other napari colormaps
+COMMON_LUTS = ["gray", "green", "magenta", "cyan", "yellow", "red", "blue",
+               "gray_r", "viridis", "inferno", "magma", "plasma", "turbo"]
+
+
+def _lut_names():
+    available = list(AVAILABLE_COLORMAPS)
+    common = [name for name in COMMON_LUTS if name in available]
+    others = sorted(name for name in available if name not in common)
+    return common + others
 
 
 class LifLoaderWidget(QWidget):
@@ -10,6 +30,10 @@ class LifLoaderWidget(QWidget):
         self.viewer = viewer
         self.lif = None
         self.images = []
+        self.channel_layers = []
+        self.lut_combos = []
+        # LUT chosen for each channel index, kept from one image to the next
+        self.lut_choices = {}
 
         self.setLayout(QVBoxLayout())
 
@@ -27,6 +51,12 @@ class LifLoaderWidget(QWidget):
         self.list_widget.itemClicked.connect(self.load_image)
         self.layout().addWidget(self.list_widget)
 
+        # LUT selection, one dropdown per channel
+        self.lut_box = QGroupBox("Channel LUTs")
+        self.lut_box.setLayout(QFormLayout())
+        self.lut_box.layout().addRow(QLabel("Load an image to choose LUTs"))
+        self.layout().addWidget(self.lut_box)
+
         # Status label
         self.status_label = QLabel("")
         self.layout().addWidget(self.status_label)
@@ -35,11 +65,13 @@ class LifLoaderWidget(QWidget):
         path, _ = QFileDialog.getOpenFileName(self, "Open LIF file", "", "LIF files (*.lif)")
         if not path:
             return
+        self.open_path(path)
 
+    def open_path(self, path):
         self.lif = LifFile(path)
         self.images = list(self.lif.get_iter_image())
 
-        self.file_label.setText(path.split("/")[-1])
+        self.file_label.setText(os.path.basename(path))
         self.list_widget.clear()
         for i, img in enumerate(self.images):
             self.list_widget.addItem(f"{i}: {img.name}")
@@ -87,12 +119,44 @@ class LifLoaderWidget(QWidget):
         self.viewer.layers.clear()
 
         # Add to napari
-        self.viewer.add_image(
+        layers = self.viewer.add_image(
             data,
             channel_axis=2,
             scale=(1, z_size, y_size, x_size),
-            name=img.name
+            name=img.name,
+            colormap=[self._lut_for_channel(c) for c in range(C)],
         )
+        # add_image returns a single layer when there is only one channel
+        self.channel_layers = layers if isinstance(layers, list) else [layers]
+        self._build_lut_combos(C)
 
         self.viewer.reset_view()
         self.status_label.setText(f"Loaded: {img.name}  |  shape: {data.shape}  |  scale: ({x_size:.3f}, {y_size:.3f}, {z_size:.3f})")
+
+    def _lut_for_channel(self, c):
+        return self.lut_choices.get(c, DEFAULT_LUTS[c % len(DEFAULT_LUTS)])
+
+    def _build_lut_combos(self, n_channels):
+        form = self.lut_box.layout()
+        while form.rowCount():
+            form.removeRow(0)
+        self.lut_combos = []
+
+        names = _lut_names()
+        for c in range(n_channels):
+            combo = QComboBox()
+            combo.addItems(names)
+            combo.setCurrentText(self._lut_for_channel(c))
+            combo.currentTextChanged.connect(
+                lambda name, c=c: self._set_lut(c, name)
+            )
+            form.addRow(f"Channel {c + 1}", combo)
+            self.lut_combos.append(combo)
+
+    def _set_lut(self, c, name):
+        self.lut_choices[c] = name
+        # Apply to the currently displayed layer, if it still exists
+        if c < len(self.channel_layers):
+            layer = self.channel_layers[c]
+            if layer in self.viewer.layers:
+                layer.colormap = name
