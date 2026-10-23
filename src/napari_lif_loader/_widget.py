@@ -131,6 +131,7 @@ class LifLoaderWidget(QWidget):
             data,
             channel_axis=2,
             scale=(1, z_size, y_size, x_size),
+            units=("pixel", "um", "um", "um"),
             name=img.name,
             colormap=[self._lut_for_channel(c) for c in range(C)],
         )
